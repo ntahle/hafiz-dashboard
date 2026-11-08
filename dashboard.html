@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="color-scheme" content="light dark" />
+	<meta name="theme-color" content="#eef0d9" />
+	<meta name="description" content="Daily and weekly bottle collection totals from every Recycle & Reward customer." />
+	<title>Collection dashboard &middot; Recycle &amp; Reward</title>
+	<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'7'%20fill%3D'%23eef0d9'%2F%3E%3Cpath%20d%3D'M22.73%2014.2A6.96%206.96%200%201%201%2017.8%209.27'%20fill%3D'none'%20stroke%3D'%232f4a2b'%20stroke-width%3D'1.93'%20stroke-linecap%3D'round'%2F%3E%3Cpath%20d%3D'M20.81%2010.08%2016.81%2010.91%2017.76%207.36Z'%20fill%3D'%232f4a2b'%2F%3E%3Ccircle%20cx%3D'16'%20cy%3D'16'%20r%3D'2.22'%20fill%3D'%23336b32'%2F%3E%3C%2Fsvg%3E" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="base.css" />
+	<link rel="stylesheet" href="dashboard.css" />
+	<script>
+		// Put the saved theme on <html> before the first paint so the
+		// dashboard never flashes the wrong palette.
+		(function () {
+			try {
+				var saved = localStorage.getItem('hafiz_dashboard_theme');
+				var followsSystem = saved !== 'light' && saved !== 'dark';
+				var dark = saved === 'dark' || (followsSystem && window.matchMedia('(prefers-color-scheme: dark)').matches);
+				if (!dark) return;
+				document.documentElement.dataset.theme = 'dark';
+				var meta = document.querySelector('meta[name="theme-color"]');
+				if (meta) meta.setAttribute('content', '#171610');
+			} catch (_) {}
+		})();
+	</script>
+</head>
+<body class="dash-body">
+	<header class="dash-banner">
+		<div class="dash-wrap dash-banner-inner">
+			<div class="dash-brand">
+				<p class="dash-eyebrow">Recycle &amp; Reward</p>
+				<h1 class="dash-title">Collection dashboard</h1>
+			</div>
+			<div class="dash-banner-side">
+				<p class="connection-pill" id="connectionPill" data-state="connecting">
+					<span class="connection-dot" aria-hidden="true"></span>
+					<span id="connectionText">Connecting</span>
+				</p>
+				<button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark theme" aria-pressed="false">
+					<svg class="theme-icon theme-icon-sun" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.25" /><path d="M10 2.2v1.6M10 16.2v1.6M2.2 10h1.6M16.2 10h1.6M4.5 4.5l1.2 1.2M14.3 14.3l1.2 1.2M15.5 4.5l-1.2 1.2M5.7 14.3l-1.2 1.2" /></svg>
+					<svg class="theme-icon theme-icon-moon" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.5a5 5 0 0 0 7.5 7.5 7.5 7.5 0 1 1-7.5-7.5Z" /></svg>
+				</button>
+			</div>
+		</div>
+	</header>
+
+	<main class="dash-main">
+		<div class="dash-wrap">
+			<div class="demo-banner" id="demoBanner" hidden>
+				<button type="button" class="demo-dot" id="demoBannerBtn" aria-label="Clear sample data" title="Clear sample data"></button>
+			</div>
+
+			<section class="summary-grid" aria-label="Collection summary">
+				<article class="stat-primary">
+					<p class="stat-label">Bottles today</p>
+					<p class="stat-value" id="statToday">0</p>
+				</article>
+				<article class="stat-block">
+					<p class="stat-label">This week</p>
+					<p class="stat-value" id="statWeek">0</p>
+					<p class="stat-note" id="statWeekNote">Week starts Monday</p>
+				</article>
+				<article class="stat-block">
+					<p class="stat-label">Active today</p>
+					<p class="stat-value" id="statActive">0</p>
+				</article>
+				<article class="stat-block">
+					<p class="stat-label">All-time bottles</p>
+					<p class="stat-value" id="statTotal">0</p>
+					<p class="stat-note" id="statTotalNote">Waiting for data</p>
+				</article>
+				<article class="stat-block">
+					<p class="stat-label">Last update</p>
+					<p class="stat-value stat-value-small" id="statUpdated">&mdash;</p>
+					<p class="stat-note" id="statUpdatedNote">Waiting for data</p>
+				</article>
+			</section>
+
+			<section class="panel trend-panel" aria-labelledby="trendTitle">
+				<div class="panel-head">
+					<div class="panel-heading">
+						<h2 class="panel-title" id="trendTitle">Collections over time</h2>
+					</div>
+					<div class="panel-actions">
+						<div class="range-switch" role="group" aria-label="Chart range">
+							<button type="button" class="range-btn" data-trend-range="7" aria-pressed="true">7 days</button>
+							<button type="button" class="range-btn" data-trend-range="30" aria-pressed="false">30 days</button>
+						</div>
+					</div>
+				</div>
+				<div class="trend-chart" id="trendChart" role="list" aria-label="Daily bottle counts"></div>
+				<p class="trend-empty" id="trendEmpty" hidden>No bottles recorded in this range yet.</p>
+				<div class="trend-summary" aria-label="Chart summary">
+					<p class="trend-stat">
+						<span class="trend-stat-label">Total</span>
+						<strong class="trend-stat-value" id="trendTotal">0</strong>
+					</p>
+					<p class="trend-stat">
+						<span class="trend-stat-label">Daily average</span>
+						<strong class="trend-stat-value" id="trendAverage">0</strong>
+					</p>
+					<p class="trend-stat">
+						<span class="trend-stat-label">Busiest day</span>
+						<strong class="trend-stat-value" id="trendPeak">&mdash;</strong>
+					</p>
+				</div>
+			</section>
+
+			<section class="panel" aria-labelledby="customersTitle">
+				<div class="panel-head">
+					<div class="panel-heading">
+						<h2 class="panel-title" id="customersTitle">Customers</h2>
+					</div>
+					<div class="panel-actions">
+						<label class="search-field">
+							<span class="visually-hidden">Search customers</span>
+							<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.1" /><path d="m12.7 12.7 3.4 3.4" /></svg>
+							<input type="search" id="customerSearch" class="search-input" placeholder="Search customer" autocomplete="off" />
+						</label>
+						<label class="sort-field">
+							<span class="visually-hidden">Sort customers</span>
+							<select id="customerSort" class="sort-select">
+								<option value="week">Sort: this week</option>
+								<option value="today">Sort: today</option>
+								<option value="total">Sort: all-time</option>
+								<option value="last">Sort: last scan</option>
+								<option value="name">Sort: name</option>
+							</select>
+						</label>
+						<button type="button" class="ghost-btn icon-btn" id="exportBtn" aria-label="Download CSV" title="Download CSV">
+							<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.25v8.5" /><path d="m6.5 8.5 3.5 3.5 3.5-3.5" /><path d="M4.5 13v2.25a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V13" /></svg>
+						</button>
+						<div class="menu-wrap">
+							<button type="button" class="ghost-btn menu-toggle" id="dataMenuBtn" aria-label="Sample data options" title="Sample data options" aria-haspopup="menu" aria-expanded="false" aria-controls="dataMenu">
+								<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5.75h12M4 10h12M4 14.25h12" /></svg>
+							</button>
+							<div class="menu" id="dataMenu" role="menu" aria-label="Sample data options" hidden>
+								<button type="button" class="menu-item" id="importBtn" role="menuitem">Load my data</button>
+								<button type="button" class="menu-item" id="demoBtn" role="menuitem">Load sample data</button>
+							</div>
+						</div>
+						<input type="file" id="importInput" accept=".json,.csv,application/json,text/csv" hidden />
+					</div>
+				</div>
+
+				<p class="import-status" id="importStatus" role="status" hidden></p>
+
+				<div class="table-wrap">
+					<table class="customer-table" id="customerTable">
+						<thead>
+							<tr>
+								<th scope="col">Customer</th>
+								<th scope="col" class="num">Today</th>
+								<th scope="col" class="num">This week</th>
+								<th scope="col" class="num">All-time</th>
+								<th scope="col">Last scan</th>
+								<th scope="col">Status</th>
+							</tr>
+						</thead>
+						<tbody id="customerRows"></tbody>
+					</table>
+					<div class="empty-state" id="emptyState">
+						<p class="empty-title" id="emptyTitle">Waiting for the first scan</p>
+						<p class="empty-note" id="emptyNote">Open the Recycle &amp; Reward app on a phone and scan a QR code. The customer will appear here within a few seconds.</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="panel activity-panel" aria-labelledby="activityTitle">
+				<div class="panel-head">
+					<div class="panel-heading">
+						<h2 class="panel-title" id="activityTitle">Live scans</h2>
+					</div>
+					<p class="activity-count" id="activityCount">0 events</p>
+				</div>
+				<ol class="activity-list" id="activityList"></ol>
+				<p class="activity-empty" id="activityEmpty">No scan events yet. The customer table still shows the latest totals.</p>
+			</section>
+		</div>
+	</main>
+
+	<dialog class="customer-dialog" id="customerDialog" aria-labelledby="dialogTitle">
+		<div class="dialog-head">
+			<div>
+				<p class="dialog-eyebrow">Customer</p>
+				<h2 class="dialog-title" id="dialogTitle">Customer</h2>
+			</div>
+			<button type="button" class="ghost-btn" id="dialogCloseBtn">Close</button>
+		</div>
+		<div class="dialog-stats">
+			<div class="dialog-stat">
+				<p class="dialog-stat-label">Today</p>
+				<p class="dialog-stat-value" id="dialogToday">0</p>
+			</div>
+			<div class="dialog-stat">
+				<p class="dialog-stat-label">This week</p>
+				<p class="dialog-stat-value" id="dialogWeek">0</p>
+			</div>
+			<div class="dialog-stat">
+				<p class="dialog-stat-label">All-time</p>
+				<p class="dialog-stat-value" id="dialogTotal">0</p>
+			</div>
+		</div>
+		<div class="chart-head">
+			<h3 class="chart-title">Daily bottles</h3>
+			<div class="range-switch" role="group" aria-label="Chart range">
+				<button type="button" class="range-btn" data-range="7" aria-pressed="true">7 days</button>
+				<button type="button" class="range-btn" data-range="30" aria-pressed="false">30 days</button>
+			</div>
+		</div>
+		<div class="chart" id="customerChart" role="list" aria-label="Daily bottle counts"></div>
+		<p class="dialog-foot" id="dialogLastScan"></p>
+	</dialog>
+
+	<script src="https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js" defer></script>
+	<script src="dashboard.js" defer></script>
+</body>
+</html>
