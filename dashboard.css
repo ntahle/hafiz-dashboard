@@ -477,6 +477,17 @@
 
 .menu-item[data-action='clear'] { color: var(--ochre); }
 
+.menu-divider {
+	height: 1px;
+	margin: var(--space-1) 0;
+	background-color: var(--line);
+}
+
+.menu-item-danger { color: var(--danger); }
+
+.menu-item-danger:hover,
+.menu-item-danger:focus-visible { color: var(--danger); }
+
 .import-status {
 	margin: 0 var(--space-4) var(--space-3);
 	padding: var(--space-2) var(--space-3);
@@ -825,6 +836,36 @@
 	line-height: var(--lead-xs);
 	color: var(--ink-3);
 }
+
+/* ---- Reset dialog ---- */
+
+.reset-dialog { width: min(30rem, 92vw); }
+
+.reset-note {
+	margin-top: var(--space-3);
+	font-size: var(--text-sm);
+	line-height: var(--lead-sm);
+	color: var(--ink-2);
+}
+
+.reset-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: var(--space-4);
+}
+
+.reset-confirm-btn {
+	color: var(--danger);
+	border-color: var(--danger);
+}
+
+.reset-confirm-btn:hover {
+	color: var(--cream);
+	background-color: var(--danger);
+	border-color: var(--danger);
+}
+
+:root[data-theme='dark'] .reset-confirm-btn:hover { color: var(--paper); }
 
 /* ---- Responsive ---- */
 

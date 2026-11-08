@@ -42,6 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		demoBtn: document.getElementById('demoBtn'),
 		dataMenuBtn: document.getElementById('dataMenuBtn'),
 		dataMenu: document.getElementById('dataMenu'),
+		resetBtn: document.getElementById('resetBtn'),
 		importBtn: document.getElementById('importBtn'),
 		importInput: document.getElementById('importInput'),
 		importStatus: document.getElementById('importStatus'),
@@ -63,6 +64,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		dialogLastScan: document.getElementById('dialogLastScan'),
 		customerChart: document.getElementById('customerChart'),
 		rangeButtons: [...document.querySelectorAll('[data-range]')],
+		resetDialog: document.getElementById('resetDialog'),
+		resetCancelBtn: document.getElementById('resetCancelBtn'),
+		resetConfirmBtn: document.getElementById('resetConfirmBtn'),
 	};
 
 	// ---------- State ----------
@@ -1310,6 +1314,83 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (settings.focusToggle && wasOpen) els.dataMenuBtn.focus();
 	}
 
+	function openResetDialog() {
+		if (!els.resetDialog) return;
+
+		if (typeof els.resetDialog.showModal === 'function') {
+			if (!els.resetDialog.open) els.resetDialog.showModal();
+		} else {
+			els.resetDialog.setAttribute('open', '');
+		}
+
+		requestAnimationFrame(() => els.resetCancelBtn.focus());
+	}
+
+	function closeResetDialog(returnFocus) {
+		if (!els.resetDialog) return;
+
+		if (typeof els.resetDialog.close === 'function' && els.resetDialog.open) {
+			els.resetDialog.close();
+		} else {
+			els.resetDialog.removeAttribute('open');
+		}
+
+		if (returnFocus) els.dataMenuBtn.focus();
+	}
+
+	function resetDashboard() {
+		const brokerConnected = !!(mqttClient && mqttClient.connected);
+		const accountIds = new Set(sessionAccountIds);
+
+		[...customers.values()].forEach((customer) => {
+			// Imported samples are included in case their ids overlap
+			// with a retained broker snapshot.
+			if (!customer.demo || customer.imported) accountIds.add(customer.accountId);
+		});
+
+		clearTimeout(saveTimer);
+		clearTimeout(renderTimer);
+		customers.clear();
+		events.length = 0;
+		sessionAccountIds = new Set();
+		selectedAccountId = null;
+		demoLoaded = false;
+		chartRange = 7;
+		trendRange = 7;
+
+		try {
+			localStorage.removeItem(CACHE_KEY);
+			localStorage.setItem(DEMO_OFF_KEY, '1');
+		} catch (_) {}
+
+		els.customerSearch.value = '';
+		els.customerSort.value = 'week';
+
+		closeDialog();
+		closeResetDialog();
+		updateRangeButtons();
+		updateTrendButtons();
+		updateDemoUI();
+
+		if (brokerConnected) {
+			accountIds.forEach((accountId) => {
+				mqttClient.publish(STATE_PREFIX + accountId, '', { qos: 1, retain: true }, (error) => {
+					if (error) console.warn('Could not clear retained snapshot for ' + accountId + ':', error.message);
+				});
+			});
+		}
+
+		showImportStatus(
+			brokerConnected
+				? 'Dashboard reset. Local data and retained broker snapshots were cleared.'
+				: 'Dashboard reset locally. Broker is offline, so retained snapshots were not cleared.',
+			brokerConnected ? 'success' : 'error'
+		);
+
+		render();
+		els.dataMenuBtn.focus();
+	}
+
 	// ---------- CSV ----------
 	function csvCell(value) {
 		return '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
@@ -1560,6 +1641,23 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	els.demoBannerBtn.addEventListener('click', () => clearDemoData({ manual: true }));
+
+	els.resetBtn.addEventListener('click', () => {
+		closeDataMenu({ focusToggle: true });
+		openResetDialog();
+	});
+
+	els.resetCancelBtn.addEventListener('click', () => closeResetDialog(true));
+	els.resetConfirmBtn.addEventListener('click', resetDashboard);
+
+	els.resetDialog.addEventListener('click', (event) => {
+		if (event.target === els.resetDialog) closeResetDialog(true);
+	});
+
+	els.resetDialog.addEventListener('cancel', (event) => {
+		event.preventDefault();
+		closeResetDialog(true);
+	});
 
 	els.dialog.addEventListener('click', (event) => {
 		if (event.target === els.dialog) closeDialog();

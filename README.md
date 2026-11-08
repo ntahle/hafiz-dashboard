@@ -33,11 +33,13 @@ The app publishes one bottle per successful scan. QR points remain the reward va
 
 ## Sample data
 
-When the dashboard has no real customer data, it shows four sample customers. Real MQTT snapshots replace the sample data automatically. Use the three-line sample data menu in the Customers panel to load or clear it manually. While sample data is active, a red dot appears above the summary; select the dot to clear it.
+When the dashboard has no real customer data, it shows four sample customers. Real MQTT snapshots replace the sample data automatically. Use the three-line data menu in the Customers panel to load or clear it manually. While sample data is active, a red dot appears above the summary; select the dot to clear it.
+
+Choose **Reset everything** in the same menu to remove all customers, live scans, local cached data, and retained broker snapshots after confirmation.
 
 ### Load your own sample data
 
-Open the three-line sample data menu in the Customers panel and choose **Load my data** to import a JSON or CSV file. Imported customers are treated as sample data: they survive a page refresh, and they are removed automatically when a real scan arrives or when you choose **Clear sample data**.
+Open the three-line data menu in the Customers panel and choose **Load my data** to import a JSON or CSV file. Imported customers are treated as sample data: they survive a page refresh, and they are removed automatically when a real scan arrives or when you choose **Clear sample data**.
 
 The JSON file can be one customer, an array of customers, or an object with a `customers` array. Customer snapshots use the same fields as the MQTT state messages; `today` and `week` are optional when `daily` is present.
 

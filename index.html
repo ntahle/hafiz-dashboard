@@ -136,12 +136,14 @@
 							<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.25v8.5" /><path d="m6.5 8.5 3.5 3.5 3.5-3.5" /><path d="M4.5 13v2.25a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V13" /></svg>
 						</button>
 						<div class="menu-wrap">
-							<button type="button" class="ghost-btn menu-toggle" id="dataMenuBtn" aria-label="Sample data options" title="Sample data options" aria-haspopup="menu" aria-expanded="false" aria-controls="dataMenu">
+							<button type="button" class="ghost-btn menu-toggle" id="dataMenuBtn" aria-label="Data options" title="Data options" aria-haspopup="menu" aria-expanded="false" aria-controls="dataMenu">
 								<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5.75h12M4 10h12M4 14.25h12" /></svg>
 							</button>
-							<div class="menu" id="dataMenu" role="menu" aria-label="Sample data options" hidden>
+							<div class="menu" id="dataMenu" role="menu" aria-label="Data options" hidden>
 								<button type="button" class="menu-item" id="importBtn" role="menuitem">Load my data</button>
 								<button type="button" class="menu-item" id="demoBtn" role="menuitem">Load sample data</button>
+								<div class="menu-divider" role="separator"></div>
+								<button type="button" class="menu-item menu-item-danger" id="resetBtn" role="menuitem">Reset everything</button>
 							</div>
 						</div>
 						<input type="file" id="importInput" accept=".json,.csv,application/json,text/csv" hidden />
@@ -215,6 +217,20 @@
 		</div>
 		<div class="chart" id="customerChart" role="list" aria-label="Daily bottle counts"></div>
 		<p class="dialog-foot" id="dialogLastScan"></p>
+	</dialog>
+
+	<dialog class="customer-dialog reset-dialog" id="resetDialog" aria-labelledby="resetTitle" aria-describedby="resetNote">
+		<div class="dialog-head">
+			<div>
+				<p class="dialog-eyebrow">Reset</p>
+				<h2 class="dialog-title" id="resetTitle">Reset everything?</h2>
+			</div>
+			<button type="button" class="ghost-btn" id="resetCancelBtn">Cancel</button>
+		</div>
+		<p class="reset-note" id="resetNote">This removes every customer, sample data, live scans, and retained snapshots from the broker. This cannot be undone.</p>
+		<div class="reset-actions">
+			<button type="button" class="ghost-btn reset-confirm-btn" id="resetConfirmBtn">Reset dashboard</button>
+		</div>
 	</dialog>
 
 	<script src="https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js" defer></script>
