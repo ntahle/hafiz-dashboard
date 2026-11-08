@@ -13,10 +13,10 @@ npm run dashboard
 Open:
 
 ```text
-http://localhost:3001/dashboard.html
+http://localhost:3001/
 ```
 
-Any static file server works. Opening `dashboard.html` through a local server is recommended so browser storage and CDN scripts behave normally.
+Any static file server works. Opening `index.html` through a local server is recommended so browser storage and CDN scripts behave normally.
 
 ## Data source
 
