@@ -1,5 +1,5 @@
-Customer,Account,Today,This week,All-time,Last scan
-Aisyah Rahman,sample-aisyah,8,42,68,2026-11-08T09:15:00Z
-Daniel Lim,sample-daniel,3,18,34,2026-11-08T08:40:00Z
-Nur Izzah,sample-izzah,0,11,26,2026-11-07T16:05:00Z
-Mei Ling,sample-meiling,0,0,17,2026-10-30T10:20:00Z
+Customer,Address,Account,Today,This week,All-time,Last scan
+Aisyah Rahman,"12 Jalan Melati, Taman Sri Indah",sample-aisyah,8,42,320,2026-11-08T09:15:00Z
+Daniel Lim,"8A Jalan Kenanga, Taman Bukit",sample-daniel,3,18,210,2026-11-08T08:40:00Z
+Nur Izzah,"45 Jalan Cempaka, Bandar Baru",sample-izzah,0,11,96,2026-11-07T16:05:00Z
+Mei Ling,"3 Jalan Mawar, Kampung Baru",sample-meiling,0,0,47,2026-10-30T10:20:00Z

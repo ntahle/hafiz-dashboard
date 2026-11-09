@@ -52,12 +52,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		emptyState: document.getElementById('emptyState'),
 		emptyTitle: document.getElementById('emptyTitle'),
 		emptyNote: document.getElementById('emptyNote'),
+		emptySampleBtn: document.getElementById('emptySampleBtn'),
 		activityList: document.getElementById('activityList'),
 		activityEmpty: document.getElementById('activityEmpty'),
 		activityCount: document.getElementById('activityCount'),
 		dialog: document.getElementById('customerDialog'),
 		dialogCloseBtn: document.getElementById('dialogCloseBtn'),
 		dialogTitle: document.getElementById('dialogTitle'),
+		dialogAddress: document.getElementById('dialogAddress'),
 		dialogToday: document.getElementById('dialogToday'),
 		dialogWeek: document.getElementById('dialogWeek'),
 		dialogTotal: document.getElementById('dialogTotal'),
@@ -169,10 +171,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	// The dashboard opens with a small set of fake customers so it can be
 	// demonstrated before any phone publishes. A real snapshot clears them.
 	const DEMO_CUSTOMERS = [
-		{ accountId: 'demo-customer-1', customer: 'Customer 1', seed: 3, recent: [12, 8, 0, 11, 9, 15, 20], total: 480, minutesAgo: 2 },
-		{ accountId: 'demo-customer-2', customer: 'Customer 2', seed: 5, recent: [4, 6, 0, 5, 8, 3, 12], total: 330, minutesAgo: 7 },
-		{ accountId: 'demo-customer-3', customer: 'Customer 3', seed: 7, recent: [0, 0, 0, 3, 4, 5, 6], total: 210, minutesAgo: 14 },
-		{ accountId: 'demo-customer-4', customer: 'Customer 4', seed: 9, recent: [0, 0, 0, 0, 0, 0, 0], total: 160, minutesAgo: 9 * 24 * 60 },
+		{ accountId: 'demo-customer-1', customer: 'Customer 1', address: '12 Jalan Melati, Taman Sri Indah', seed: 3, recent: [12, 8, 0, 11, 9, 15, 20], total: 480, minutesAgo: 2 },
+		{ accountId: 'demo-customer-2', customer: 'Customer 2', address: '8A Jalan Kenanga, Taman Bukit', seed: 5, recent: [4, 6, 0, 5, 8, 3, 12], total: 330, minutesAgo: 7 },
+		{ accountId: 'demo-customer-3', customer: 'Customer 3', address: '45 Jalan Cempaka, Bandar Baru', seed: 7, recent: [0, 0, 0, 3, 4, 5, 6], total: 210, minutesAgo: 14 },
+		{ accountId: 'demo-customer-4', customer: 'Customer 4', address: '3 Jalan Mawar, Kampung Baru', seed: 9, recent: [0, 0, 0, 0, 0, 0, 0], total: 160, minutesAgo: 9 * 24 * 60 },
 	];
 	const DEMO_EVENTS = [
 		{ accountId: 'demo-customer-3', customer: 'Customer 3', bottles: 1, minutesAgo: 1 },
@@ -238,6 +240,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			return {
 				accountId: config.accountId,
 				customer: config.customer,
+				address: config.address,
 				day: todayKey,
 				weekStart: weekStartKey,
 				today: daily[todayKey] || 0,
@@ -330,6 +333,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	// so real MQTT snapshots replace them automatically.
 	const IMPORT_HEADER_ALIASES = {
 		customer: ['customer', 'customer name', 'name', 'username'],
+		address: ['address', 'alamat', 'customer address', 'street address'],
 		accountId: ['account', 'account id', 'accountid', 'customer id', 'id'],
 		today: ['today', 'bottles today', 'today bottles'],
 		week: ['this week', 'week', 'weekly', 'this week bottles', 'week bottles'],
@@ -401,7 +405,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function looksLikeImportCustomer(value) {
 		if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-		return ['customer', 'name', 'username', 'accountId', 'account', 'id', 'daily', 'days', 'today', 'week', 'total', 'bottles']
+		return ['customer', 'name', 'username', 'address', 'accountId', 'account', 'id', 'daily', 'days', 'today', 'week', 'total', 'bottles']
 			.some((key) => Object.prototype.hasOwnProperty.call(value, key));
 	}
 
@@ -409,6 +413,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
 
 		const name = String(raw.customer ?? raw.name ?? raw.username ?? '').trim().slice(0, 80);
+		const address = typeof raw.address === 'string' ? raw.address.trim().slice(0, 200) : '';
 		let accountId = String(raw.accountId ?? raw.account ?? raw.id ?? '').trim().slice(0, 80);
 		if (!name && !accountId) return null;
 
@@ -433,6 +438,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		return {
 			accountId,
 			customer: name || 'Customer ' + (index + 1),
+			address,
 			day: typeof raw.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.day) ? raw.day : todayKey,
 			weekStart: typeof raw.weekStart === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.weekStart) ? raw.weekStart : weekStartKey,
 			today: dailyKeys.length > 0 ? toNumber(daily[todayKey]) : parseImportCount(raw.today ?? raw.bottlesToday),
@@ -595,11 +601,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				const accountId = cell(cells, 'accountId');
 				if (!date || bottles <= 0 || (!customer && !accountId)) return;
 
+				const address = cell(cells, 'address');
 				const key = accountId || ('name:' + customer.toLowerCase());
 				let entry = grouped.get(key);
 				if (!entry) {
-					entry = { customer, accountId, daily: {}, total: 0, lastScanAt: null };
+					entry = { customer, accountId, address, daily: {}, total: 0, lastScanAt: null };
 					grouped.set(key, entry);
+				} else if (!entry.address && address) {
+					entry.address = address;
 				}
 
 				entry.daily[date] = (entry.daily[date] || 0) + bottles;
@@ -613,6 +622,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				const built = buildImportedCustomer({
 					accountId: entry.accountId,
 					customer: entry.customer,
+					address: entry.address,
 					daily: entry.daily,
 					total: entry.total,
 					lastScanAt: entry.lastScanAt,
@@ -625,6 +635,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				const raw = {
 					accountId: cell(cells, 'accountId'),
 					customer: cell(cells, 'customer'),
+					address: cell(cells, 'address'),
 					today: cell(cells, 'today'),
 					week: cell(cells, 'week'),
 					lastScanAt: cell(cells, 'lastScanAt'),
@@ -783,6 +794,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		return {
 			accountId,
 			customer: String(raw.customer || 'Unnamed customer').trim().slice(0, 80) || 'Unnamed customer',
+			address: typeof raw.address === 'string' ? raw.address.trim().slice(0, 200) : '',
 			day: typeof raw.day === 'string' ? raw.day : '',
 			weekStart: typeof raw.weekStart === 'string' ? raw.weekStart : '',
 			today: toNumber(raw.today),
@@ -853,7 +865,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		const list = sortedCustomers();
 		if (!query) return list;
 		return list.filter((customer) => {
-			return customer.customer.toLowerCase().includes(query) || customer.accountId.toLowerCase().includes(query);
+			const address = customer.address || '';
+			return customer.customer.toLowerCase().includes(query)
+				|| address.toLowerCase().includes(query)
+				|| customer.accountId.toLowerCase().includes(query);
 		});
 	}
 
@@ -1100,6 +1115,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (rows.length === 0) {
 			els.customerTable.hidden = true;
 			els.emptyState.hidden = false;
+			els.emptySampleBtn.hidden = allCustomers.length > 0;
 
 			if (allCustomers.length === 0) {
 				setEmpty(
@@ -1109,7 +1125,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (query) {
 				setEmpty(
 					'No customer matches "' + query + '"',
-					'Try another name, or clear the search to see every customer.'
+					'Try another name or address, or clear the search to see every customer.'
 				);
 			} else {
 				setEmpty('No customers yet', 'Customer snapshots will appear here when a phone publishes one.');
@@ -1119,6 +1135,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		els.customerTable.hidden = false;
 		els.emptyState.hidden = true;
+		els.emptySampleBtn.hidden = true;
 
 		rows.forEach((customer) => {
 			const totals = totalsFor(customer);
@@ -1130,13 +1147,24 @@ window.addEventListener('DOMContentLoaded', () => {
 			nameButton.type = 'button';
 			nameButton.className = 'customer-link';
 			nameButton.dataset.accountId = customer.accountId;
-			nameButton.setAttribute('aria-label', 'View bottle history for ' + customer.customer);
+			nameButton.setAttribute(
+				'aria-label',
+				'View bottle history for ' + customer.customer + (customer.address ? ' at ' + customer.address : '')
+			);
 
 			const name = document.createElement('span');
 			name.className = 'customer-name';
 			name.textContent = customer.customer;
 
 			nameButton.append(name);
+
+			if (customer.address) {
+				const address = document.createElement('span');
+				address.className = 'customer-address';
+				address.textContent = customer.address;
+				nameButton.append(address);
+			}
+
 			nameCell.append(nameButton);
 			row.append(nameCell);
 
@@ -1223,6 +1251,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		const totals = totalsFor(customer);
 		els.dialogTitle.textContent = customer.customer;
+		els.dialogAddress.textContent = customer.address || '';
+		els.dialogAddress.hidden = !customer.address;
 		els.dialogToday.textContent = formatNumber(totals.today);
 		els.dialogWeek.textContent = formatNumber(totals.week);
 		els.dialogTotal.textContent = formatNumber(totals.total);
@@ -1397,12 +1427,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function exportCsv() {
-		const rows = [['Customer', 'Account', 'Today', 'This week', 'All-time', 'Last scan']];
+		const rows = [['Customer', 'Address', 'Account', 'Today', 'This week', 'All-time', 'Last scan']];
 
 		sortedCustomers().forEach((customer) => {
 			const totals = totalsFor(customer);
 			rows.push([
 				customer.customer,
+				customer.address || '',
 				customer.accountId,
 				totals.today,
 				totals.week,
@@ -1639,6 +1670,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (demoLoaded) clearDemoData({ manual: true });
 		else loadDemoData();
 	});
+
+	els.emptySampleBtn.addEventListener('click', loadDemoData);
 
 	els.demoBannerBtn.addEventListener('click', () => clearDemoData({ manual: true }));
 

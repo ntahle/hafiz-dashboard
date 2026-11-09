@@ -33,7 +33,7 @@ The app publishes one bottle per successful scan. QR points remain the reward va
 
 ## Sample data
 
-When the dashboard has no real customer data, it shows four sample customers. Real MQTT snapshots replace the sample data automatically. Use the three-line data menu in the Customers panel to load or clear it manually. While sample data is active, a red dot appears above the summary; select the dot to clear it.
+When the dashboard has no real customer data, it shows four sample customers. Real MQTT snapshots replace the sample data automatically. Use the three-line data menu in the Customers panel to load or clear it manually. While sample data is active, a red dot appears above the summary; select the dot to clear it. An empty dashboard also shows a **Load sample data** button.
 
 Choose **Reset everything** in the same menu to remove all customers, live scans, local cached data, and retained broker snapshots after confirmation.
 
@@ -49,6 +49,7 @@ The JSON file can be one customer, an array of customers, or an object with a `c
     {
       "accountId": "sample-aisyah",
       "customer": "Aisyah",
+      "address": "12 Jalan Melati, Taman Sri Indah",
       "daily": {
         "2026-11-02": 12,
         "2026-11-03": 8,
@@ -79,7 +80,7 @@ An optional `events` array fills the **Live scans** feed:
 
 CSV files can use either of these shapes:
 
-- A summary row per customer, matching the CSV export from the Customers toolbar: `Customer,Account,Today,This week,All-time,Last scan`
-- A daily row per customer per day: `Customer,Account,Date,Bottles`
+- A summary row per customer, matching the CSV export from the Customers toolbar: `Customer,Address,Account,Today,This week,All-time,Last scan`
+- A daily row per customer per day: `Customer,Address,Account,Date,Bottles`
 
-A ready-to-edit summary template is included as [sample-data-template.csv](sample-data-template.csv). Column names are case-insensitive. If `Account` is omitted, the dashboard creates an id from the customer name.
+A ready-to-edit summary template is included as [sample-data-template.csv](sample-data-template.csv). Column names are case-insensitive. If `Account` is omitted, the dashboard creates an id from the customer name. The `Address` column is optional.
